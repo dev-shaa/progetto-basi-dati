@@ -1,4 +1,4 @@
-create table project_user(
-  name varchar primary key,
-  password varchar not null
+create table user(
+  name varchar(64) primary key,
+  password varchar(64) not null
 );
