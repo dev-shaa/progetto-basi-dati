@@ -1,6 +1,5 @@
 -- controlla se node1 è un discendente di node2
-create
-or replace function is_descendant(node1 category.id % type, node2 category.id % type) returns boolean as $$
+create or replace function is_descendant(node1 category.id % type, node2 category.id % type) returns boolean as $$
 declare
   current_parent category.id % type;
 begin
@@ -19,8 +18,7 @@ end;
 $$ language plpgsql;
 
 -- un riferimento non può essere associato esplicitamente a una categoria e una sua sottocategoria
-create
-or replace function recursive_parenting() returns trigger as $$
+create or replace function cyclic_dependency() returns trigger as $$
 declare
   category_cursor record;
 begin
@@ -34,11 +32,9 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger recursive_parenting_trigger before
-insert
-  on category_reference_association for each row execute procedure recursive_parenting();
+create trigger cyclic_dependency_trigger before insert on category_reference_association for each row
+  execute procedure cyclic_dependency();
 
---
 create view id_collection as (
   select id from "thesis"
   union
@@ -55,8 +51,7 @@ create view id_collection as (
   select id from "website"
 );
 
-create
-or replace function disjoint_total_subclass() returns trigger as $$
+create or replace function disjoint_total_subreference() returns trigger as $$
 begin
   if new.id in (select * from id_collection) then
     raise exception 'there is another reference subclass associated with this reference';
@@ -66,8 +61,5 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger disjoint_total_subclass_trigger before
-insert
-  or
-update
-  on article for each row execute procedure disjoint_total_subclass();
+create trigger disjoint_total_subreference_trigger before insert or update on article for each row
+  execute procedure disjoint_total_subreference();
