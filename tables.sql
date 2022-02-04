@@ -49,7 +49,7 @@ alter table bibliographic_reference
     add constraint unique_doi_per_user unique(owner, doi);
 
 create table article(
-    id integer not null references bibliographic_reference(id) 
+    id integer not null unique references bibliographic_reference(id) 
         on update cascade on delete cascade,
     page_count positive_nullable_integer,
     url varchar(256),
@@ -62,7 +62,7 @@ alter table article
     add constraint issn_pattern_check check (issn is null or issn ~ '^[0-9]{4}-[0-9]{3}[0-9xX]$');
 
 create table book(
-    id integer not null references bibliographic_reference(id)
+    id integer not null unique references bibliographic_reference(id)
         on update cascade on delete cascade,
     page_count positive_nullable_integer,
     url varchar(256),
@@ -71,7 +71,7 @@ create table book(
 );
 
 create table thesis(
-    id integer not null references bibliographic_reference(id)
+    id integer not null unique references bibliographic_reference(id)
         on update cascade on delete cascade,
     page_count positive_nullable_integer,
     url varchar(256),
@@ -81,20 +81,20 @@ create table thesis(
 );
 
 create table website(
-    id integer not null references bibliographic_reference(id)
+    id integer not null unique references bibliographic_reference(id)
         on update cascade on delete cascade,
     url varchar(128) not null
 );
 
 create table source_code(
-    id integer not null references bibliographic_reference(id)
+    id integer not null unique references bibliographic_reference(id)
         on update cascade on delete cascade,
     url varchar(128) not null,
     code_language programming_language_enum
 );
 
 create table video(
-    id integer not null references bibliographic_reference(id)
+    id integer not null unique references bibliographic_reference(id)
         on update cascade on delete cascade,
     url varchar(128) not null,
     width positive_nullable_integer,
@@ -104,7 +104,7 @@ create table video(
 );
 
 create table image(
-    id integer not null references bibliographic_reference(id)
+    id integer not null unique references bibliographic_reference(id)
         on update cascade on delete cascade,
     url varchar(128) not null,
     width positive_nullable_integer,
@@ -126,6 +126,7 @@ create table author(
 create table author_reference_associations(
     reference integer references bibliographic_reference(id)
         on update cascade on delete cascade,
+    -- TODO: author foreign key
 );
 
 create table tag(
