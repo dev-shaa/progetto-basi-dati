@@ -1,40 +1,3 @@
--- controlla se node1 è un discendente di node2
-create or replace function is_descendant(node1 category.id % type, node2 category.id % type) returns boolean as $$
-declare
-  current_parent category.id % type;
-begin
-  select parent into current_parent from category where id = node1;
-
-  while current_parent is not null loop
-    if current_parent = node2 then
-      return true;
-    end if;
-
-    select parent into current_parent from category where id = node1;
-  end loop;
-
-  return false;
-end;
-$$ language plpgsql;
-
--- un riferimento non può essere associato esplicitamente a una categoria e una sua sottocategoria
-create or replace function cyclic_dependency() returns trigger as $$
-declare
-  category_cursor record;
-begin
-  for category_cursor in select category from category_reference_association where reference = new.reference loop
-    if is_descendant(new.category, category_cursor.category) or is_descendant(category_cursor.category, new.category) then
-      raise exception 'reference cannot be in a category and its subcategory explicitly: %', new.reference;
-    end if;
-  end loop;
-
-  return new;
-end;
-$$ language plpgsql;
-
-create trigger cyclic_dependency_trigger before insert on category_reference_association for each row
-  execute procedure cyclic_dependency();
-
 create view id_collection as (
   select id from "thesis"
   union
@@ -53,7 +16,8 @@ create view id_collection as (
 
 create or replace function disjoint_total_subreference() returns trigger as $$
 begin
-  if new.id in (select * from id_collection) then
+
+  if tg_op = 'INSERT' and new.id in (select * from id_collection) then
     raise exception 'there is another reference subclass associated with this reference';
   end if;
 
