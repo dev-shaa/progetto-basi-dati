@@ -213,8 +213,9 @@ alter table category
     add constraint owner_fk foreign key (owner) references user_app(name) on update cascade on delete cascade;
 
 -- non sono possibili due categorie con lo stesso nome e lo stesso genitore appartenenti allo stesso utente
-alter table category
-    add constraint no_same_name_under_parent unique(owner, name, parent);
+-- non possiamo usare solo il vincolo unique perchè postgresql non considera i valori null, quindi sarebbero possibili
+-- due categorie senza genitore che hanno lo stesso nome
+create unique index no_same_name_children on category(owner, name, (parent is null)) where parent is null;
 
 create table category_reference_association(
     category integer not null,
