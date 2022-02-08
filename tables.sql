@@ -40,8 +40,7 @@ create table bibliographic_reference(
 
 -- foreign key
 alter table bibliographic_reference
-    add constraint reference_owner_fk foreign key (owner) references user_app(name)
-        on update cascade on delete cascade;
+    add constraint reference_owner_fk foreign key (owner) references user_app(name) on update cascade on delete cascade;
 
 -- siccome ogni utente ha accesso solo ai propri riferimenti, possono esserci più riferimenti con lo stesso titolo ma appartenenti a utenti diversi
 -- per ogni utente, il titolo deve essere univoco
@@ -106,7 +105,7 @@ alter table website
 create table source_code(
     id integer not null unique,
     url varchar(256) not null,
-    code_language programming_language_enum
+    programming_language programming_language_enum
 );
 
 -- foreign key
@@ -118,7 +117,7 @@ create table video(
     url varchar(256) not null,
     width positive_integer,
     height positive_integer,
-    frameRate positive_integer,
+    framerate positive_integer,
     duration positive_integer
 );
 
@@ -137,6 +136,54 @@ create table image(
 -- foreign key
 alter table image
     add constraint image_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
+
+-- vincolo di disgiunzione
+create view id_collection as (
+  select id from "thesis"
+  union
+  select id from "book"
+  union
+  select id from "article"
+  union
+  select id from "video"
+  union
+  select id from "image"
+  union
+  select id from "source_code"
+  union
+  select id from "website"
+);
+
+create or replace function disjoint_total_subreference() returns trigger as $$
+begin
+    if (tg_op = 'INSERT' or (tg_op = 'UPDATE' and new.id <> old.id)) and new.id in (select id from id_collection) then
+        raise exception 'there is another reference subclass associated with this reference';
+    end if;
+
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger disjoint_article_trigger before insert or update on article for each row
+    execute procedure disjoint_total_subreference();
+
+create trigger disjoint_book_trigger before insert or update on book for each row
+    execute procedure disjoint_total_subreference();
+
+create trigger disjoint_thesis_trigger before insert or update on thesis for each row
+    execute procedure disjoint_total_subreference();
+
+create trigger disjoint_website_trigger before insert or update on website for each row
+    execute procedure disjoint_total_subreference();
+
+create trigger disjoint_image_trigger before insert or update on image for each row
+    execute procedure disjoint_total_subreference();
+
+create trigger disjoint_video_trigger before insert or update on video for each row
+    execute procedure disjoint_total_subreference();
+
+create trigger disjoint_source_code_trigger before insert or update on source_code for each row
+    execute procedure disjoint_total_subreference();
 
 create table related_references(
     quoted_by integer not null references bibliographic_reference(id)
@@ -171,6 +218,8 @@ alter table author
     add constraint unique_orcid unique(orcid);
 
 -- possono esserci omonimi, ma l'orcid deve essere diverso per ognuno
+-- non possiamo usare solo il vincolo unique perchè postgresql non considera i valori null, quindi sarebbero possibili
+-- due autori con lo stesso nome senza orcid
 create unique index unique_author on author(name, (orcid is null)) where orcid is null;
 
 create table author_reference_association(
@@ -202,7 +251,7 @@ create table category(
     id serial primary key, -- essere primary key impedisce anche che una categoria sia sotto-categoria di sè stessa
     name varchar(64) not null,
     parent integer,
-    owner varchar(128)
+    owner varchar(128) not null
 );
 
 -- foreign key
@@ -213,9 +262,12 @@ alter table category
     add constraint owner_fk foreign key (owner) references user_app(name) on update cascade on delete cascade;
 
 -- non sono possibili due categorie con lo stesso nome e lo stesso genitore appartenenti allo stesso utente
+alter table category
+    add constraint unique_name_with_parent unique(name, parent, owner);
+
 -- non possiamo usare solo il vincolo unique perchè postgresql non considera i valori null, quindi sarebbero possibili
 -- due categorie senza genitore che hanno lo stesso nome
-create unique index no_same_name_children on category(owner, name, (parent is null)) where parent is null;
+create unique index unique_name_with_no_parent on category(name, (parent is null), owner) where parent is null;
 
 create table category_reference_association(
     category integer not null,
