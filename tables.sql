@@ -233,6 +233,10 @@ create table author(
 
 -- TODO: orcid check https://support.orcid.org/hc/en-us/articles/360006897674-Structure-of-the-ORCID-Identifier
 
+-- un codice orcid è composto da 4 cifre, un trattino, tre cifre e infine una cifra o una x (minuscola o maiuscola)
+alter table author
+    add constraint orcid_pattern_check check (orcid is null or orcid ~ '^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9xX]$');
+
 -- l'orcid è univoco
 alter table author
     add constraint unique_orcid unique(orcid);
@@ -271,7 +275,7 @@ alter table tag
 
 -- crea tabella category
 create table category(
-    id serial primary key, -- essere primary key impedisce anche che una categoria sia sotto-categoria di sè stessa
+    id serial primary key, -- essere primary key impedisce anche che una categoria sia sotto-categoria transitivamente di sè stessa
     name varchar(64) not null,
     parent integer,
     owner varchar(128) not null
@@ -291,6 +295,10 @@ alter table category
 -- non possiamo usare solo il vincolo unique perchè postgresql non considera i valori null, quindi sarebbero possibili
 -- due categorie senza genitore che hanno lo stesso nome
 create unique index unique_name_with_no_parent on category(name, (parent is null), owner) where parent is null;
+
+-- una categoria non può essere sottocategoria di sè stessa
+alter table category
+    add constraint no_subcategory_of_itself check(id <> parent);
 
 -- crea tabella category_reference_association
 create table category_reference_association(
