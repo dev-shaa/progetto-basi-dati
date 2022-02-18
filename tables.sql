@@ -64,7 +64,7 @@ create table book(
     isbn char(13)
 );
 
--- foreign key
+-- crea il vincolo di foreign key per TODO: commenta
 alter table book
     add constraint book_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
 
@@ -152,6 +152,27 @@ alter table related_references
 -- un riferimento può citarne un altro solo una volta
 alter table related_references
     add constraint unique_quotation unique(quoted_by, quotes);
+
+-- un riferimento di un utente può essere associato solo a riferimenti dello stesso utente
+create or replace function related_reference_same_owner() returns trigger as $$
+declare
+    first_reference_owner user_app.name % type;
+    second_reference_owner user_app.name % type;
+begin
+    select owner into first_reference_owner from bibliographic_reference where id = new.quoted_by;
+    select owner into second_reference_owner from category where id = new.quotes;
+
+    if reference_owner <> category_owner then
+        raise exception 'references do not belong to the same user';
+    end if;
+
+    return new;
+end;
+$$ language plpgsql;
+
+-- aggiungi trigger alla tabella RELATED_REFERENCES
+create trigger related_reference_same_owner_trigger before insert or update on related_references for each row
+    execute procedure related_reference_same_owner();
 
 -- crea tabella AUTHOR
 create table author(
@@ -245,7 +266,26 @@ alter table category_reference_association
 alter table category_reference_association
     add constraint unique_reference unique(category, reference);
 
+-- un riferimento di un utente può essere associato solo ad una categoria dello stesso utente
+create or replace function category_reference_same_owner() returns trigger as $$
+declare
+    reference_owner user_app.name % type;
+    category_owner user_app.name % type;
+begin
+    select owner into reference_owner from bibliographic_reference where id = new.reference;
+    select owner into category_owner from category where id = new.category;
 
+    if reference_owner <> category_owner then
+        raise exception 'reference and category do not belong to the same user';
+    end if;
+
+    return new;
+end;
+$$ language plpgsql;
+
+-- aggiungi trigger alla tabella CATEGORY_REFERENCE_ASSOCIATION
+create trigger category_reference_same_owner_trigger before insert or update on category_reference_association for each row
+    execute procedure category_reference_same_owner();
 
 
 -- creazione vista comprendente tutti gli id usati come foreign key, usata per il trigger di disgiunzione tra sottoclassi di BIBLIOGRAPHIC_REFERENCE
@@ -259,7 +299,6 @@ create view id_collection as (
   select id from "source_code" union
   select id from "website"
 );
-
 
 -- implementazione vincolo di disgiunzione tra sottoclassi di BIBLIOGRAPHIC_REFERENCE
 
