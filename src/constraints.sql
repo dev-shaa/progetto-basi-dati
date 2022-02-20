@@ -116,18 +116,15 @@ create trigger disjoint_source_code before insert or update on source_code for e
 
 -----------------------------------------------------------------------------------------------------------------
 -- FIXME: quando si elimina una sottoclasse dovrebbe essere eliminato anche il riferimento base
--- create or replace procedure delete_base_reference() returns trigger as $$
+-- create or replace function delete_super_reference() returns trigger as $$
 -- begin
---     if (tg_op = 'INSERT' or (tg_op = 'UPDATE' and new.id <> old.id)) and new.id in (select id from id_collection) then
---         raise exception 'there is another reference subclass associated with this reference';
---     end if;
-
---     return new;
+--     delete from bibliographic_reference where id = old.id;
+--     return null;
 -- end;
 -- $$ language plpgsql;
 
--- create trigger disjoint_article_trigger after delete on article for each row
---     delete from bibliographic_reference where id = old.id;
+-- create trigger delete_super_reference_article after delete on article for each row
+--     execute procedure delete_super_reference();
 
 -----------------------------------------------------------------------------------------------------------------
 -- non possono esserci categorie cicliche (sottocategorie di sè stesse, anche transitivamente)

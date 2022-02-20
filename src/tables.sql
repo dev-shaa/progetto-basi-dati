@@ -7,17 +7,15 @@ create type programming_language_enum as enum('C', 'CSHARP', 'JAVA', 'PYTHON', '
 -- crea un nuovo tipo di intero maggiore positivo (o nullo)
 create domain positive_integer as integer check(value is null or value > 0) default null;
 
----------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------
 -- crea la tabella USER_APP
----------------------------------------------------
 create table user_app(
     name varchar(128) primary key,
     password varchar(64) not null
 );
 
----------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------
 -- crea la tabella BIBLIOGRAPHIC_REFERENCE
----------------------------------------------------
 create table bibliographic_reference(
     id serial primary key,
     owner varchar(128) not null,
@@ -27,6 +25,8 @@ create table bibliographic_reference(
     language language_enum,
     pubblication_date date
 );
+
+-- TODO: doi pattern check
 
 -- crea il vincolo di foreign key per l'utente proprietario del riferimento
 alter table bibliographic_reference
@@ -42,9 +42,8 @@ alter table bibliographic_reference
 alter table bibliographic_reference
     add constraint unique_doi_per_user unique(owner, doi);
 
----------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------
 -- crea la tabella ARTICLE
----------------------------------------------------
 create table article(
     id integer not null unique,
     page_count positive_integer,
@@ -61,9 +60,8 @@ alter table article
 alter table article
     add constraint issn_pattern_check check (issn is null or issn ~ '^[0-9]{4}-[0-9]{3}[0-9xX]$');
 
----------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------
 -- crea la tabella BOOK
----------------------------------------------------
 create table book(
     id integer not null unique,
     page_count positive_integer,
@@ -78,9 +76,8 @@ alter table book
 
 -- TODO: isbn pattern
 
----------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------
 -- crea la tabella THESIS
----------------------------------------------------
 create table thesis(
     id integer not null unique,
     page_count positive_integer,
@@ -94,9 +91,8 @@ create table thesis(
 alter table thesis
     add constraint thesis_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
 
----------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------
 -- crea la tabella WEBSITE
----------------------------------------------------
 create table website(
     id integer not null unique,
     url varchar(256) not null
@@ -106,9 +102,8 @@ create table website(
 alter table website
     add constraint website_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
 
----------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------
 -- crea la tabella SOURCE_CODE
----------------------------------------------------
 create table source_code(
     id integer not null unique,
     url varchar(256) not null,
@@ -119,9 +114,8 @@ create table source_code(
 alter table source_code
     add constraint source_code_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
 
----------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------
 -- crea la tabella VIDEO
----------------------------------------------------
 create table video(
     id integer not null unique,
     url varchar(256) not null,
@@ -135,6 +129,7 @@ create table video(
 alter table video
     add constraint video_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
 
+-----------------------------------------------------------------------------------------------------------------
 -- crea la tabella IMAGE
 create table image(
     id integer not null unique,
@@ -147,9 +142,8 @@ create table image(
 alter table image
     add constraint image_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
 
----------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------
 -- crea la tabella RELATED_REFERENCES
----------------------------------------------------
 create table related_references(
     quoted_by integer not null,
     quotes integer not null
@@ -172,7 +166,7 @@ alter table related_references
     add constraint unique_quotation unique(quoted_by, quotes);
 
 -----------------------------------------------------------------------------------------------------------------
--- crea tabella AUTHOR
+-- crea la tabella AUTHOR
 create table author(
     id serial primary key,
     name varchar(256) not null,
@@ -194,7 +188,7 @@ alter table author
 create unique index unique_author on author(name, (orcid is null)) where orcid is null;
 
 -----------------------------------------------------------------------------------------------------------------
--- crea tabella AUTHOR_REFERENCE_ASSOCIATION
+-- crea la tabella AUTHOR_REFERENCE_ASSOCIATION
 create table author_reference_association(
     reference integer not null,
     author integer not null
@@ -213,7 +207,7 @@ alter table author_reference_association
     add constraint unique_author_reference unique(reference, author);
 
 -----------------------------------------------------------------------------------------------------------------
--- crea tabella TAG
+-- crea la tabella TAG
 create table tag(
     name varchar(128) not null,
     reference integer not null
@@ -228,7 +222,7 @@ alter table tag
     add constraint unique_tag_reference unique(name, reference);
 
 -----------------------------------------------------------------------------------------------------------------
--- crea tabella CATEGORY
+-- crea la tabella CATEGORY
 create table category(
     id serial primary key,
     name varchar(64) not null,
@@ -255,7 +249,7 @@ alter table category
 create unique index unique_name_with_no_parent on category(name, (parent is null), owner) where parent is null;
 
 -----------------------------------------------------------------------------------------------------------------
--- crea tabella CATEGORY_REFERENCE_ASSOCIATION
+-- crea la tabella CATEGORY_REFERENCE_ASSOCIATION
 create table category_reference_association(
     category integer not null,
     reference integer not null
