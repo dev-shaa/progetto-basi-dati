@@ -14,19 +14,35 @@ create table user_app(
     password varchar(64) not null
 );
 
+-- il nome di un utente non deve essere vuoto
+alter table user_app
+    add constraint no_empty_user_name check(name <> '');
+
+-- la password di un utente non deve essere vuoto
+alter table user_app
+    add constraint no_empty_user_password check(password <> '');
+
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella BIBLIOGRAPHIC_REFERENCE
 create table bibliographic_reference(
     id serial primary key,
     owner varchar(128) not null,
     title varchar(256) not null,
-    doi varchar(128),
+    doi varchar,
     description varchar(1024),
     language language_enum,
     pubblication_date date
 );
 
--- TODO: doi pattern check
+-- il titolo di un riferimento non deve essere vuoto
+alter table bibliographic_reference
+    add constraint no_empty_reference_title check(title <> '');
+
+-- controlla se il doi è valido, secondo lo standard indicato
+-- https://www.doi.org/doi_handbook/2_Numbering.html#2.6.1
+-- esempio: 10.1000/182.182
+alter table bibliographic_reference
+    add constraint valid_doi check (doi is null or doi ~ '^10\.[0-9]{4,}\/\w{1,}(\.\w{1,}){1,}$')
 
 -- crea il vincolo di foreign key per l'utente proprietario del riferimento
 alter table bibliographic_reference
@@ -34,8 +50,7 @@ alter table bibliographic_reference
 
 -- il titolo di un riferimento deve essere univoco
 -- siccome ogni utente ha accesso solo ai propri riferimenti, possono esserci più riferimenti con lo stesso titolo ma appartenenti a utenti diversi
-alter table bibliographic_reference
-    add constraint unique_reference_per_user unique(owner, title);
+create unique index unique_reference_per_user on bibliographic_reference(owner, lower(title));
 
 -- il doi di un riferimento deve essere univoco
 -- siccome ogni utente ha accesso solo ai propri riferimenti, possono esserci più riferimenti con lo stesso doi ma appartenenti a utenti diversi
@@ -58,7 +73,7 @@ alter table article
 
 -- un codice ISSN è composto da quattro cifre, un trattino, tre cifre e infine una cifra o una x
 alter table article
-    add constraint issn_pattern_check check (issn is null or issn ~ '^[0-9]{4}-[0-9]{3}[0-9xX]$');
+    add constraint valid_issn check (issn is null or issn ~ '[0-9]{4}-[0-9]{3}[0-9xX]');
 
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella BOOK
@@ -102,6 +117,10 @@ create table website(
 alter table website
     add constraint website_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
 
+-- l'url non può essere vuoto
+alter table website
+    add constraint no_empty_website_url check(url <> '');
+
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella SOURCE_CODE
 create table source_code(
@@ -113,6 +132,10 @@ create table source_code(
 -- crea il vincolo di foreign key per bibliographic_reference
 alter table source_code
     add constraint source_code_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
+
+-- l'url non può essere vuoto
+alter table source_code
+    add constraint no_empty_source_code_url check(url <> '');
 
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella VIDEO
@@ -129,6 +152,10 @@ create table video(
 alter table video
     add constraint video_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
 
+-- l'url non può essere vuoto
+alter table video
+    add constraint no_empty_video_url check(url <> '');
+
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella IMAGE
 create table image(
@@ -141,6 +168,10 @@ create table image(
 -- crea il vincolo di foreign key per bibliographic_reference
 alter table image
     add constraint image_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
+
+-- l'url non può essere vuoto
+alter table image
+    add constraint no_empty_image_url check(url <> '');
 
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella RELATED_REFERENCES
@@ -173,10 +204,14 @@ create table author(
     orcid char(20)
 );
 
+-- il nome dell'autore non può essere vuoto
+alter table author
+    add constraint no_empty_author_name check(name <> '');
+
 -- un codice orcid è composto da 16 cifre separate a gruppi di 4 da un trattino
 -- l'ultima cifra può essere sostituita da una x
 alter table author
-    add constraint orcid_pattern_check check (orcid is null or orcid ~ '^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9xX]$');
+    add constraint valid_orcid check (orcid is null or orcid ~ '[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9xX]');
 
 -- l'orcid è univoco
 alter table author
@@ -185,7 +220,8 @@ alter table author
 -- possono esserci autori omonimi, ma l'orcid deve essere diverso per ognuno
 -- non possiamo usare un vincolo unique composito perchè postgresql non considera i valori null,
 -- quindi sarebbero possibili due autori con lo stesso nome senza orcid
-create unique index unique_author on author(name, (orcid is null)) where orcid is null;
+-- nota: la capitalizzazione del nome non è importante
+create unique index unique_author on author(lower(name), (orcid is null)) where orcid is null;
 
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella AUTHOR_REFERENCE_ASSOCIATION
@@ -204,7 +240,7 @@ alter table author_reference_association
 
 -- un riferimento può essere associato a un autore una sola volta
 alter table author_reference_association
-    add constraint unique_author_reference unique(reference, author);
+    add constraint unique_author_reference_association unique(reference, author);
 
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella TAG
@@ -213,13 +249,16 @@ create table tag(
     reference integer not null
 );
 
+-- il nome del tag non può essere vuoto
+alter table tag
+    add constraint no_empty_tag_name check(name <> '');
+
 -- crea il vincolo di foreign key per il riferimento a cui è associata la parola chiave
 alter table tag
     add constraint reference_fk foreign key (reference) references bibliographic_reference(id) on update cascade on delete cascade;
 
--- una parola chiave può essere associata a un riferimento una sola volta
-alter table tag
-    add constraint unique_tag_reference unique(name, reference);
+-- una parola chiave può essere associata a un riferimento una sola volta (anche se capitalizzato in maniera diversa)
+create unique index unique_tag_per_reference on tag(lower(name), reference);
 
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella CATEGORY
@@ -230,6 +269,10 @@ create table category(
     owner varchar(128) not null
 );
 
+-- il nome della categoria non può essere vuoto
+alter table category
+    add constraint no_empty_category_name check(name <> '');
+
 -- crea il vincolo di foreign key per la categoria padre della categoria
 alter table category
     add constraint parent_fk foreign key (parent) references category(id) on update cascade on delete cascade;
@@ -238,15 +281,16 @@ alter table category
 alter table category
     add constraint owner_fk foreign key (owner) references user_app(name) on update cascade on delete cascade;
 
--- non sono possibili due categorie con lo stesso nome e lo stesso genitore
-alter table category
-    add constraint unique_name_with_parent unique(name, parent);
+-- per l'implementazione del vincolo "no same name in directory" servono due indici di unicità
+-- non sono possibili due categorie con lo stesso nome (anche se capitalizzati in maniera diversa) e lo stesso genitore
+create unique index unique_name_with_parent on category(lower(name), parent);
 
+-- TODO: commenta meglio
 -- oltre al vincolo unique è necessario anche creare un indice, perchè postgresql non considera i valori null e sarebbero possibili due categorie senza genitore che hanno lo stesso nome
 -- è necessario specificare anche il proprietario della categoria, perchè possono esistere due categorie con lo stesso nome senza genitore ma che appartengono a due utenti diversi
 -- con il vincolo unique precedente non è necessario siccome, per un vincolo successivo (vedi subcategory_same_owner), le categorie e le sottocategorie devono avere lo stesso prorietario
 -- quindi già si sa a chi appartengono
-create unique index unique_name_with_no_parent on category(name, (parent is null), owner) where parent is null;
+create unique index unique_name_with_no_parent on category(lower(name), (parent is null), owner) where parent is null;
 
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella CATEGORY_REFERENCE_ASSOCIATION
@@ -265,4 +309,4 @@ alter table category_reference_association
 
 -- un riferimento può essere associato a una categoria una sola volta
 alter table category_reference_association
-    add constraint unique_reference unique(category, reference);
+    add constraint unique_reference_per_category unique(category, reference);

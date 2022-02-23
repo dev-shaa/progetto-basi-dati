@@ -1,5 +1,5 @@
 -- una categoria deve appartenere allo stesso utente della super-categoria (se ce l'ha)
-create or replace function subcategory_same_owner_function() returns trigger as $$
+create or replace function same_owner_for_subcategory_function() returns trigger as $$
 declare
     parent_owner user_app.name % type;
 begin
@@ -19,12 +19,12 @@ end;
 $$ language plpgsql;
 
 -- implementa trigger
-create trigger subcategory_same_owner before insert or update on category for each row
-    execute procedure subcategory_same_owner_function();
+create trigger same_owner_for_subcategory before insert or update on category for each row
+    execute procedure same_owner_for_subcategory_function();
 
 -----------------------------------------------------------------------------------------------------------------
 -- un riferimento di un utente può essere associato solo a riferimenti dello stesso utente
-create or replace function related_reference_same_owner_function() returns trigger as $$
+create or replace function same_owner_for_related_references_function() returns trigger as $$
 declare
     first_reference_owner user_app.name % type;
     second_reference_owner user_app.name % type;
@@ -32,7 +32,7 @@ begin
     select owner into first_reference_owner from bibliographic_reference where id = new.quoted_by;
     select owner into second_reference_owner from category where id = new.quotes;
 
-    if reference_owner <> category_owner then
+    if first_reference_owner <> second_reference_owner then
         raise exception 'references do not belong to the same user';
     end if;
 
@@ -41,12 +41,12 @@ end;
 $$ language plpgsql;
 
 -- implementa trigger
-create trigger related_reference_same_owner before insert or update on related_references for each row
-    execute procedure related_reference_same_owner_function();
+create trigger same_owner_for_related_references before insert or update on related_references for each row
+    execute procedure same_owner_for_related_references_function();
 
 -----------------------------------------------------------------------------------------------------------------
 -- un riferimento di un utente può essere associato solo ad una categoria dello stesso utente
-create or replace function category_reference_same_owner() returns trigger as $$
+create or replace function same_owner_for_category_reference_function() returns trigger as $$
 declare
     reference_owner user_app.name % type;
     category_owner user_app.name % type;
@@ -63,8 +63,8 @@ end;
 $$ language plpgsql;
 
 -- implementa trigger
-create trigger category_reference_same_owner_trigger before insert or update on category_reference_association for each row
-    execute procedure category_reference_same_owner();
+create trigger same_owner_for_category_reference before insert or update on category_reference_association for each row
+    execute procedure same_owner_for_category_reference_function();
 
 -----------------------------------------------------------------------------------------------------------------
 -- le sottoclassi di BIBLIOGRAPHIC_REFERENCE devono essere disgiunte
@@ -115,20 +115,8 @@ create trigger disjoint_source_code before insert or update on source_code for e
     execute procedure disjoint_subreference();
 
 -----------------------------------------------------------------------------------------------------------------
--- FIXME: quando si elimina una sottoclasse dovrebbe essere eliminato anche il riferimento base
--- create or replace function delete_super_reference() returns trigger as $$
--- begin
---     delete from bibliographic_reference where id = old.id;
---     return null;
--- end;
--- $$ language plpgsql;
-
--- create trigger delete_super_reference_article after delete on article for each row
---     execute procedure delete_super_reference();
-
------------------------------------------------------------------------------------------------------------------
 -- non possono esserci categorie cicliche (sottocategorie di sè stesse, anche transitivamente)
-create or replace function cyclic_categories_function() returns trigger as $$
+create or replace function no_cyclic_categories_function() returns trigger as $$
 begin
     if is_descendant(new.parent, new.id) then
         raise exception 'category cannot be subcategory of itself';
@@ -140,11 +128,11 @@ $$ language plpgsql;
 
 -- implementa trigger
 create trigger no_cyclic_categories before insert or update on category for each row
-    execute procedure cyclic_categories_function();
+    execute procedure no_cyclic_categories_function();
 
 -----------------------------------------------------------------------------------------------------------------
 -- un riferimento non può essere associato a una categoria e a una sua sottocategoria esplicitamente
-create or replace function no_explicit_associaton_function() returns trigger as $$
+create or replace function no_explicit_association_function() returns trigger as $$
 declare
     category_cursor record;
 begin
@@ -160,4 +148,4 @@ $$ language plpgsql;
 
 -- trigger per l'associazione tra riferimento e categoria
 create trigger no_explicit_associaton_with_category_and_subcategory before insert or update on category_reference_association for each row
-    execute procedure no_explicit_associaton_function();
+    execute procedure no_explicit_association_function();
