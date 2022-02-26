@@ -82,14 +82,12 @@ create table book(
     page_count positive_integer,
     url varchar(256),
     publisher varchar(128),
-    isbn char(13)
+    isbn varchar(13)
 );
 
 -- crea il vincolo di foreign key per bibliographic_reference
 alter table book
     add constraint book_id_fk foreign key (id) references bibliographic_reference(id) on update cascade on delete cascade;
-
--- TODO: isbn pattern
 
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella THESIS
@@ -282,14 +280,12 @@ alter table category
     add constraint owner_fk foreign key (owner) references user_app(name) on update cascade on delete cascade;
 
 -- per l'implementazione del vincolo "no same name in directory" servono due indici di unicità
--- non sono possibili due categorie con lo stesso nome (anche se capitalizzati in maniera diversa) e lo stesso genitore
+-- non sono possibili due categorie con lo stesso nome e lo stesso genitore
 create unique index unique_name_with_parent on category(lower(name), parent);
 
--- TODO: commenta meglio
--- oltre al vincolo unique è necessario anche creare un indice, perchè postgresql non considera i valori null e sarebbero possibili due categorie senza genitore che hanno lo stesso nome
--- è necessario specificare anche il proprietario della categoria, perchè possono esistere due categorie con lo stesso nome senza genitore ma che appartengono a due utenti diversi
--- con il vincolo unique precedente non è necessario siccome, per un vincolo successivo (vedi subcategory_same_owner), le categorie e le sottocategorie devono avere lo stesso prorietario
--- quindi già si sa a chi appartengono
+-- serve un altro indice per controllare le categorie senza genitore, perchè postgresql non considera i valori null e sarebbero possibili due categorie con lo stesso nome
+-- siccome possono esistere due categorie con lo stesso nome senza genitore, ma devono appartenere a due utenti diversi, è necessario specificare anche il proprietario
+-- con l'indice precedente non è necessario perchè per un vincolo successivo le categorie e le sottocategorie devono avere lo stesso proprietario (vedi subcategory_same_owner)
 create unique index unique_name_with_no_parent on category(lower(name), (parent is null), owner) where parent is null;
 
 -----------------------------------------------------------------------------------------------------------------
