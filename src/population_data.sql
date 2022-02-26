@@ -1,3 +1,5 @@
+-- SCRIPT PER IL POPOLAMENTO DELLE TABELLE
+
 -- UTENTI
 
 insert into user_app(name, password) values('Mario Rossi', 'qwerty');
@@ -60,21 +62,32 @@ insert into bibliographic_reference(id, owner, title, description, doi, language
     values(200, 'Salvatore', 'Sistemi di basi di dati (Settima Edizione)', 'Libro che spiega il funzionamento di un database', null, 'ENGLISH', '2015-01-01');
 insert into bibliographic_reference(id, owner, title, description, doi, language, pubblication_date)
     values(201, 'Salvatore', 'Clean Code', 'Libro con numerosi consigli per scrivere codice pulito ed efficiente', null, 'ENGLISH', '2009-01-01');
+insert into bibliographic_reference(id, owner, title, description, doi, language, pubblication_date)
+    values(202, 'Salvatore', 'Progetto', 'Progetto per la gestione di riferimenti bibliografici', null, 'ITALIAN', null);
 
 insert into book(id, page_count, url, publisher, isbn) values(200, 800, null, 'Pearson', '9788891902594');
 insert into book(id, page_count, url, publisher, isbn) values(201, 575, null, 'Pearson', '9788850334384');
+insert into source_code(id, url, programming_language) values(202, 'www.github.com', 'JAVA');
 
 ---
 
 insert into bibliographic_reference(id, owner, title, description, doi, language, pubblication_date)
     values(300, 'GenericUser', 'Nice image', 'A very nice image i found online', null, null, null);
+insert into bibliographic_reference(id, owner, title, description, doi, language, pubblication_date)
+    values(301, 'GenericUser', 'A book about flowers', 'A book about flowers', '10.4500/891.aaa.1', 'ENGLISH', '2015-06-24');
 
 insert into image(id, url, width, height) values(300, 'https://cdn.mr-fothergills.co.uk/product-images/op/z/33182az.jpg', 800, 800);
+insert into book(id, page_count, url, publisher, isbn) values(301, 40, 'www.anotherpublisher.co.uk/books/flower/000000', 'AnotherPublisher', null);
 
 -- RIMANDI
 
 insert into related_references(quoted_by, quotes) values(2, 1);
 insert into related_references(quoted_by, quotes) values(2, 3);
+
+insert into related_references(quoted_by, quotes) values(202, 201);
+insert into related_references(quoted_by, quotes) values(202, 200);
+
+insert into related_references(quoted_by, quotes) values(301, 300);
 
 -- ASSOCIAZIONE RIFERIMENTI - CATEGORIE
 
@@ -86,15 +99,20 @@ insert into category_reference_association(category, reference) values(103, 101)
 
 insert into category_reference_association(category, reference) values(201, 200);
 insert into category_reference_association(category, reference) values(202, 201);
+insert into category_reference_association(category, reference) values(200, 202);
 
 -- ASSOCIAZIONE RIFERIMENTI - AUTORI
 
 insert into author_reference_association(reference, author) values(1, 1);
 insert into author_reference_association(reference, author) values(2, 1);
 
+insert into author_reference_association(reference, author) values(100, 6);
+
 insert into author_reference_association(reference, author) values(200, 2);
 insert into author_reference_association(reference, author) values(200, 3);
 insert into author_reference_association(reference, author) values(201, 4);
+
+insert into author_reference_association(reference, author) values(301, 5);
 
 -- ASSOCIAZIONE RIFERIMENTI - TAG
 
@@ -118,5 +136,14 @@ insert into tag(name, reference) values('clean code', 201);
 insert into tag(name, reference) values('object orientation', 201);
 insert into tag(name, reference) values('università', 201);
 
+insert into tag(name, reference) values('java', 202);
+insert into tag(name, reference) values('codice', 202);
+insert into tag(name, reference) values('progetto', 202);
+insert into tag(name, reference) values('object orientation', 202);
+insert into tag(name, reference) values('sql', 202);
+insert into tag(name, reference) values('università', 202);
+
 insert into tag(name, reference) values('flower', 300);
 insert into tag(name, reference) values('pink', 300);
+
+insert into tag(name, reference) values('flower', 301);
