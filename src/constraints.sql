@@ -30,7 +30,7 @@ declare
     second_reference_owner user_app.name % type;
 begin
     select owner into first_reference_owner from bibliographic_reference where id = new.quoted_by;
-    select owner into second_reference_owner from category where id = new.quotes;
+    select owner into second_reference_owner from bibliographic_reference where id = new.quotes;
 
     if first_reference_owner <> second_reference_owner then
         raise exception 'references do not belong to the same user';
