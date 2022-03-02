@@ -81,38 +81,38 @@ insert into book(id, page_count, url, publisher, isbn) values(301, 40, 'www.anot
 
 -- RIMANDI
 
-insert into related_references(quoted_by, quotes) values(2, 1);
-insert into related_references(quoted_by, quotes) values(2, 3);
+insert into quotations(quoted_by, quotes) values(2, 1);
+insert into quotations(quoted_by, quotes) values(2, 3);
 
-insert into related_references(quoted_by, quotes) values(202, 201);
-insert into related_references(quoted_by, quotes) values(202, 200);
+insert into quotations(quoted_by, quotes) values(202, 201);
+insert into quotations(quoted_by, quotes) values(202, 200);
 
-insert into related_references(quoted_by, quotes) values(301, 300);
+insert into quotations(quoted_by, quotes) values(301, 300);
 
 -- ASSOCIAZIONE RIFERIMENTI - CATEGORIE
 
-insert into category_reference_association(category, reference) values(1, 1);
-insert into category_reference_association(category, reference) values(2, 2);
+insert into reference_grouping(category, reference) values(1, 1);
+insert into reference_grouping(category, reference) values(2, 2);
 
-insert into category_reference_association(category, reference) values(100, 100);
-insert into category_reference_association(category, reference) values(103, 101);
+insert into reference_grouping(category, reference) values(100, 100);
+insert into reference_grouping(category, reference) values(103, 101);
 
-insert into category_reference_association(category, reference) values(201, 200);
-insert into category_reference_association(category, reference) values(202, 201);
-insert into category_reference_association(category, reference) values(200, 202);
+insert into reference_grouping(category, reference) values(201, 200);
+insert into reference_grouping(category, reference) values(202, 201);
+insert into reference_grouping(category, reference) values(200, 202);
 
 -- ASSOCIAZIONE RIFERIMENTI - AUTORI
 
-insert into author_reference_association(reference, author) values(1, 1);
-insert into author_reference_association(reference, author) values(2, 1);
+insert into authorship(reference, author) values(1, 1);
+insert into authorship(reference, author) values(2, 1);
 
-insert into author_reference_association(reference, author) values(100, 6);
+insert into authorship(reference, author) values(100, 6);
 
-insert into author_reference_association(reference, author) values(200, 2);
-insert into author_reference_association(reference, author) values(200, 3);
-insert into author_reference_association(reference, author) values(201, 4);
+insert into authorship(reference, author) values(200, 2);
+insert into authorship(reference, author) values(200, 3);
+insert into authorship(reference, author) values(201, 4);
 
-insert into author_reference_association(reference, author) values(301, 5);
+insert into authorship(reference, author) values(301, 5);
 
 -- ASSOCIAZIONE RIFERIMENTI - TAG
 

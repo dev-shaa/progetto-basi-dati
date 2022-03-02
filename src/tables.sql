@@ -42,7 +42,7 @@ alter table bibliographic_reference
 -- https://www.doi.org/doi_handbook/2_Numbering.html#2.6.1
 -- esempio: 10.1000/182.182
 alter table bibliographic_reference
-    add constraint valid_doi check (doi is null or doi ~ '^10\.[0-9]{4,}\/\w{1,}(\.\w{1,}){1,}$')
+    add constraint valid_doi check (doi is null or doi ~ '^10\.[0-9]{4,}\/\w{1,}(\.\w{1,})*$')
 
 -- crea il vincolo di foreign key per l'utente proprietario del riferimento
 alter table bibliographic_reference
@@ -172,26 +172,26 @@ alter table image
     add constraint no_empty_image_url check(url <> '');
 
 -----------------------------------------------------------------------------------------------------------------
--- crea la tabella RELATED_REFERENCES
-create table related_references(
+-- crea la tabella QUOTATIONS
+create table quotations(
     quoted_by integer not null,
     quotes integer not null
 );
 
 -- crea il vincolo di foreign key per il riferimento che cita
-alter table related_references
+alter table quotations
     add constraint quoted_by_fk foreign key (quoted_by) references bibliographic_reference(id) on update cascade on delete cascade;
 
 -- crea il vincolo di foreign key per il riferimento citato
-alter table related_references
+alter table quotations
     add constraint quotes_fk foreign key (quotes) references bibliographic_reference(id) on update cascade on delete cascade;
 
 -- un riferimento non può citare sè stesso
-alter table related_references
+alter table quotations
     add constraint no_self_quotation check(quoted_by <> quotes);
 
 -- un riferimento può citarne un altro solo una volta
-alter table related_references
+alter table quotations
     add constraint unique_quotation unique(quoted_by, quotes);
 
 -----------------------------------------------------------------------------------------------------------------
@@ -223,21 +223,21 @@ create unique index unique_author on author(lower(name), (orcid is null)) where 
 
 -----------------------------------------------------------------------------------------------------------------
 -- crea la tabella AUTHOR_REFERENCE_ASSOCIATION
-create table author_reference_association(
+create table authorship(
     reference integer not null,
     author integer not null
 );
 
 -- crea il vincolo di foreign key per il riferimento
-alter table author_reference_association
+alter table authorship
     add constraint reference_fk foreign key (reference) references bibliographic_reference(id) on update cascade on delete cascade;
 
 -- crea il vincolo di foreign key per l'autore
-alter table author_reference_association
+alter table authorship
     add constraint author_fk foreign key (author) references author(id) on update cascade on delete cascade;
 
 -- un riferimento può essere associato a un autore una sola volta
-alter table author_reference_association
+alter table authorship
     add constraint unique_author_reference_association unique(reference, author);
 
 -----------------------------------------------------------------------------------------------------------------
@@ -289,20 +289,20 @@ create unique index unique_name_with_parent on category(lower(name), parent);
 create unique index unique_name_with_no_parent on category(lower(name), (parent is null), owner) where parent is null;
 
 -----------------------------------------------------------------------------------------------------------------
--- crea la tabella CATEGORY_REFERENCE_ASSOCIATION
-create table category_reference_association(
+-- crea la tabella REFERENCE_GROUPING
+create table reference_grouping(
     category integer not null,
     reference integer not null
 );
 
 -- crea il vincolo di foreign key per la categoria
-alter table category_reference_association
+alter table reference_grouping
     add constraint category_fk foreign key (category) references category(id) on update cascade on delete cascade;
 
 -- crea il vincolo di foreign key per il riferimento
-alter table category_reference_association
+alter table reference_grouping
     add constraint reference_fk foreign key (reference) references bibliographic_reference(id) on update cascade on delete cascade;
 
 -- un riferimento può essere associato a una categoria una sola volta
-alter table category_reference_association
+alter table reference_grouping
     add constraint unique_reference_per_category unique(category, reference);

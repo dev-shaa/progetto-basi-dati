@@ -41,7 +41,7 @@ end;
 $$ language plpgsql;
 
 -- implementa trigger
-create trigger same_owner_for_related_references before insert or update on related_references for each row
+create trigger same_owner_for_related_references before insert or update on quotations for each row
     execute procedure same_owner_for_related_references_function();
 
 -----------------------------------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ end;
 $$ language plpgsql;
 
 -- implementa trigger
-create trigger same_owner_for_category_reference before insert or update on category_reference_association for each row
+create trigger same_owner_for_category_reference before insert or update on reference_grouping for each row
     execute procedure same_owner_for_category_reference_function();
 
 -----------------------------------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ create or replace function no_explicit_association_function() returns trigger as
 declare
     category_cursor record;
 begin
-    for category_cursor in select category from category_reference_association where reference = new.reference loop
+    for category_cursor in select category from reference_grouping where reference = new.reference loop
         if is_descendant(new.category, category_cursor.category) or is_descendant(category_cursor.category, new.category) then
             raise exception 'reference cannot be in a category and its subcategory explicitly: %', new.reference;
         end if;
@@ -147,5 +147,5 @@ end;
 $$ language plpgsql;
 
 -- trigger per l'associazione tra riferimento e categoria
-create trigger no_explicit_associaton_with_category_and_subcategory before insert or update on category_reference_association for each row
+create trigger no_explicit_associaton_with_category_and_subcategory before insert or update on reference_grouping for each row
     execute procedure no_explicit_association_function();
