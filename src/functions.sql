@@ -17,3 +17,13 @@ begin
     return false;
 end;
 $$ language plpgsql;
+
+-- funzione che restituisce il numero di volte in cui un riferimento è presente nei rimandi degli altri
+create or replace function get_received_quotation_count(reference bibliographic_reference.id % type) returns integer as $$
+declare
+    quoted_count integer;
+begin
+    select count(*) into quoted_count from quotations where quotes = reference;
+    return quoted_count;
+end;
+$$ language plpgsql;

@@ -11,8 +11,8 @@ insert into user_app(name, password) values('GenericUser', 'my_secret_password')
 
 insert into category(id, name, owner, parent) values(1, 'Categoria 1', 'Mario Rossi', null);
 insert into category(id, name, owner, parent) values(2, 'Categoria 2', 'Mario Rossi', null);
-insert into category(name, owner, parent) values('Categoria 3', 'Mario Rossi', null);
-insert into category(name, owner, parent) values('Categoria 4', 'Mario Rossi', 1);
+insert into category(id, name, owner, parent) values(3, 'Categoria 3', 'Mario Rossi', null);
+insert into category(id, name, owner, parent) values(4, 'Categoria 4', 'Mario Rossi', 1);
 
 insert into category(id, name, owner, parent) values(100, 'AAA', 'Luca Bianchi', null);
 insert into category(id, name, owner, parent) values(101, 'BBB', 'Luca Bianchi', 100);

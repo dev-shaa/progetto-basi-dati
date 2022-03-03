@@ -222,7 +222,7 @@ alter table author
 create unique index unique_author on author(lower(name), (orcid is null)) where orcid is null;
 
 -----------------------------------------------------------------------------------------------------------------
--- crea la tabella AUTHOR_REFERENCE_ASSOCIATION
+-- crea la tabella AUTHORSHIP
 create table authorship(
     reference integer not null,
     author integer not null
