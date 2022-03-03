@@ -1,9 +1,14 @@
 # Progetto Base Dati
 
 Basi di dati relazionale per la gestione di bibliografie, implementata con PostgreSQL 12.9.
-Gli utenti hanno la possibilità di organizzare i propri riferimenti bibliografici, che possono essere di diverso tipo.
 
-Le istruzioni sono state divise in diversi file per renderle più leggibili, tuttavia per poter ricreare il database è necessario eseguirli nel seguente ordine:
+## Requisiti
+
+- PostgreSQL 12.9
+
+## Istruzioni
+
+Il codice è stato diviso in diversi file per renderlo più leggibile, tuttavia per poter ricreare il database è necessario eseguirli nel seguente ordine:
 1. `tables.sql`
 2. `views.sql`
 3. `functions.sql`
