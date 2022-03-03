@@ -10,3 +10,4 @@ Le istruzioni sono state divise in diversi file per renderle più leggibili, tut
 4. `constraints.sql`
 
 Viene fornito anche il file `population_data.sql` in cui sono presenti dati per popolare il database.
+Si consiglia di eseguirlo con un database vuoto per evitare eventuali conflitti.
