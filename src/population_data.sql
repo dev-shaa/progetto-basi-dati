@@ -147,3 +147,16 @@ insert into tag(name, reference) values('flower', 300);
 insert into tag(name, reference) values('pink', 300);
 
 insert into tag(name, reference) values('flower', 301);
+
+-- IMPORTANTE:
+-- dopo aver inserito i dati precedenti, è possibile che PostgreSQL dia errore ai futuri inserimenti in alcune tabelle
+-- a quanto pare, dopo un inserimento di molti valori tutti insieme, può verificarsi una desincronizzazione delle chiavi seriali
+-- è quindi necessario resettare manualmente la chiave, impostandola al valore massimo della sequenza
+-- https://stackoverflow.com/a/21639138/17731255
+
+-- pg_get_serial_sequence recupera il nome della sequenza della colonna della tabella indicata
+-- selezionamo il valore massimo della sequenza
+-- impostiamo il valore della sequenza su esso
+SELECT setval(pg_get_serial_sequence ('category', 'id'), (SELECT MAX(id) FROM category));
+SELECT setval(pg_get_serial_sequence ('bibliographic_reference', 'id'), (SELECT MAX(id) FROM bibliographic_reference));
+SELECT setval(pg_get_serial_sequence ('author', 'id'), (SELECT MAX(id) FROM author));
